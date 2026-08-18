@@ -24,18 +24,78 @@ class TeamService {
     return team;
   }
 
-  async getTeamById(id) {
+  async getTeamById(id, userId) {
     const team = await TeamRepository.findById(id);
     if (!team) {
       const error = new Error('Team not found');
       error.statusCode = 404;
       throw error;
     }
+
+    const isMember = team.members.some((m) => m.user.toString() === userId.toString());
+    if (!isMember) {
+      const error = new Error('You do not have permission to view this team');
+      error.statusCode = 403;
+      throw error;
+    }
+
     return team;
   }
 
-  async getAllTeams(filters = {}) {
-    return await TeamRepository.findAll(filters);
+  async joinTeam(teamId, userId) {
+    const team = await TeamRepository.findById(teamId);
+    if (!team) {
+      const error = new Error('Team not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const isAlreadyMember = team.members.some((m) => m.user.toString() === userId.toString());
+    if (isAlreadyMember) {
+      const error = new Error('You are already a member of this team');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const updatedTeam = await TeamRepository.addMember(teamId, userId, 'member');
+
+    await UserRepository.update(userId, { team: teamId });
+    await invalidateCache('cache:/api/teams*');
+
+    return updatedTeam;
+  }
+
+  async leaveTeam(teamId, userId) {
+    const team = await TeamRepository.findById(teamId);
+    if (!team) {
+      const error = new Error('Team not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const member = team.members.find((m) => m.user.toString() === userId.toString());
+    if (!member) {
+      const error = new Error('You are not a member of this team');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (member.role === 'owner') {
+      const error = new Error('Owner cannot leave the team. Transfer ownership or delete the team.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const updatedTeam = await TeamRepository.removeMember(teamId, userId);
+
+    await UserRepository.update(userId, { team: null });
+    await invalidateCache('cache:/api/teams*');
+
+    return updatedTeam;
+  }
+
+  async getUserTeams(userId) {
+    return await TeamRepository.findByMember(userId);
   }
 
   async updateTeam(id, updateData) {

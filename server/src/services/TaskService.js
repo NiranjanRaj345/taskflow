@@ -87,7 +87,11 @@ class TaskService {
   }
 
   async getUserTasks(userId) {
-    return await TaskRepository.findByUser(userId);
+    const user = await UserRepository.findById(userId);
+    if (!user || !user.team) {
+      return [];
+    }
+    return await TaskRepository.findByTeam(user.team.toString());
   }
 
   async getTaskStats(teamId, userId) {

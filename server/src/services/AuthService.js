@@ -72,6 +72,10 @@ class AuthService {
 
     return user;
   }
+
+  async getAllUsers() {
+    return await UserRepository.findAll({ isActive: true });
+  }
 }
 
 module.exports = new AuthService();

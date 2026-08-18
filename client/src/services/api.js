@@ -33,6 +33,7 @@ export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   getProfile: () => api.get('/auth/profile'),
   updateProfile: (data) => api.put('/auth/profile', data),
+  getAllUsers: () => api.get('/auth/users'),
 };
 
 export const taskAPI = {
@@ -48,10 +49,13 @@ export const taskAPI = {
 
 export const teamAPI = {
   getAll: () => api.get('/teams'),
+  getMyTeams: () => api.get('/teams/my'),
   getById: (id) => api.get(`/teams/${id}`),
   create: (data) => api.post('/teams', data),
   update: (id, data) => api.put(`/teams/${id}`, data),
   delete: (id) => api.delete(`/teams/${id}`),
+  join: (id) => api.post(`/teams/${id}/join`),
+  leave: (id) => api.post(`/teams/${id}/leave`),
   addMember: (id, data) => api.post(`/teams/${id}/members`, data),
   removeMember: (id, data) => api.delete(`/teams/${id}/members`, { data }),
 };

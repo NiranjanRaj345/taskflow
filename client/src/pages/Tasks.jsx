@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { taskAPI } from '../services/api';
+import { taskAPI, teamAPI, authAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import { Plus, Edit2, Trash2, Filter } from 'lucide-react';
 
 const Tasks = () => {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState({ status: '', priority: '' });
+  const [teams, setTeams] = useState([]);
+  const [users, setUsers] = useState([]);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    teamAPI.getAll().then((res) => setTeams(res.data.data)).catch(() => {});
+    authAPI.getAllUsers().then((res) => setUsers(res.data.data)).catch(() => {});
+  }, []);
 
   const { data, isLoading } = useQuery('tasks', () => taskAPI.getAll(filter));
 
@@ -17,6 +24,9 @@ const Tasks = () => {
       queryClient.invalidateQueries('userTasks');
       setShowForm(false);
       toast.success('Task created successfully');
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to create task');
     },
   });
 
@@ -102,8 +112,18 @@ const Tasks = () => {
                 <option value="urgent">Urgent</option>
               </select>
               <input name="dueDate" type="date" required className="px-3 py-2 border border-gray-300 rounded-md" />
-              <input name="team" type="text" required placeholder="Team ID" className="px-3 py-2 border border-gray-300 rounded-md" />
-              <input name="assignedTo" type="text" required placeholder="Assigned User ID" className="px-3 py-2 border border-gray-300 rounded-md" />
+              <select name="team" required className="px-3 py-2 border border-gray-300 rounded-md">
+                <option value="">Select Team</option>
+                {teams.map((team) => (
+                  <option key={team._id} value={team._id}>{team.name}</option>
+                ))}
+              </select>
+              <select name="assignedTo" required className="px-3 py-2 border border-gray-300 rounded-md">
+                <option value="">Assign to</option>
+                {users.map((u) => (
+                  <option key={u._id} value={u._id}>{u.name || u.email}</option>
+                ))}
+              </select>
             </div>
             <textarea name="description" rows="3" required placeholder="Description" className="px-3 py-2 border border-gray-300 rounded-md w-full" />
             <div className="flex gap-2">

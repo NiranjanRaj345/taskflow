@@ -22,7 +22,7 @@ class TeamController {
 
   async getTeamById(req, res, _next) {
     try {
-      const team = await teamService.getTeamById(req.params.id);
+      const team = await teamService.getTeamById(req.params.id, req.user.userId);
 
       res.status(200).json({
         success: true,
@@ -39,14 +39,72 @@ class TeamController {
     }
   }
 
-  async getAllTeams(req, res, _next) {
+  async getUserTeams(req, res, _next) {
     try {
-      const teams = await teamService.getAllTeams();
+      const teams = await teamService.getUserTeams(req.user.userId);
 
       res.status(200).json({
         success: true,
         count: teams.length,
         data: teams,
+      });
+    } catch (error) {
+      const statusCode = error.statusCode || 500;
+      const message = error.message || 'Server Error';
+      res.status(statusCode).json({
+        success: false,
+        message,
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+      });
+    }
+  }
+
+  async getAllTeams(req, res, _next) {
+    try {
+      const teams = await teamService.getAllTeams(req.user.userId);
+
+      res.status(200).json({
+        success: true,
+        count: teams.length,
+        data: teams,
+      });
+    } catch (error) {
+      const statusCode = error.statusCode || 500;
+      const message = error.message || 'Server Error';
+      res.status(statusCode).json({
+        success: false,
+        message,
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+      });
+    }
+  }
+
+  async joinTeam(req, res, _next) {
+    try {
+      const team = await teamService.joinTeam(req.params.id, req.user.userId);
+
+      res.status(200).json({
+        success: true,
+        data: team,
+      });
+    } catch (error) {
+      const statusCode = error.statusCode || 500;
+      const message = error.message || 'Server Error';
+      res.status(statusCode).json({
+        success: false,
+        message,
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+      });
+    }
+  }
+
+  async leaveTeam(req, res, _next) {
+    try {
+      const team = await teamService.leaveTeam(req.params.id, req.user.userId);
+
+      res.status(200).json({
+        success: true,
+        data: team,
       });
     } catch (error) {
       const statusCode = error.statusCode || 500;

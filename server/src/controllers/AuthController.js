@@ -79,6 +79,26 @@ class AuthController {
       });
     }
   }
+
+  async getAllUsers(req, res, _next) {
+    try {
+      const users = await authService.getAllUsers();
+
+      res.status(200).json({
+        success: true,
+        count: users.length,
+        data: users,
+      });
+    } catch (error) {
+      const statusCode = error.statusCode || 500;
+      const message = error.message || 'Server Error';
+      res.status(statusCode).json({
+        success: false,
+        message,
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+      });
+    }
+  }
 }
 
 module.exports = new AuthController();

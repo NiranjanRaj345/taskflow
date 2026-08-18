@@ -8,5 +8,6 @@ router.post('/register', validationMiddleware.schemas.register, authController.r
 router.post('/login', validationMiddleware.schemas.login, authController.login);
 router.get('/profile', auth, authController.getProfile);
 router.put('/profile', auth, validationMiddleware.schemas.updateProfile, authController.updateProfile);
+router.get('/users', auth, authController.getAllUsers);
 
 module.exports = router;
