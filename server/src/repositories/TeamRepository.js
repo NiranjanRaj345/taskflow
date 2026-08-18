@@ -3,7 +3,7 @@ const Team = require('../models/Team');
 class TeamRepository {
   async create(teamData) {
     const team = await Team.create(teamData);
-    return team.populate('createdBy', 'name email');
+    return await Team.findById(team._id).populate('createdBy', 'name email');
   }
 
   async findById(id) {
