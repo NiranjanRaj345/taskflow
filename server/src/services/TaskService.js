@@ -1,0 +1,113 @@
+const TaskRepository = require('../repositories/TaskRepository');
+const TeamRepository = require('../repositories/TeamRepository');
+const UserRepository = require('../repositories/UserRepository');
+const { invalidateCache } = require('../config/redis');
+
+class TaskService {
+  async createTask(taskData, userId) {
+    if (!taskData.team) {
+      const error = new Error('Team is required');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const team = await TeamRepository.findById(taskData.team);
+    if (!team) {
+      const error = new Error('Team not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (taskData.assignedTo) {
+      const assignedUser = await UserRepository.findById(taskData.assignedTo);
+      if (!assignedUser) {
+        const error = new Error('Assigned user not found');
+        error.statusCode = 404;
+        throw error;
+      }
+    }
+
+    const task = await TaskRepository.create({
+      ...taskData,
+      createdBy: userId,
+    });
+
+    await invalidateCache('cache:/api/tasks*');
+
+    return task;
+  }
+
+  async getTasks(filters = {}) {
+    const tasks = await TaskRepository.findAll(filters);
+    return tasks;
+  }
+
+  async getTaskById(id) {
+    const task = await TaskRepository.findById(id);
+    if (!task) {
+      const error = new Error('Task not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    return task;
+  }
+
+  async updateTask(id, updateData) {
+    const task = await TaskRepository.update(id, updateData);
+    if (!task) {
+      const error = new Error('Task not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    await invalidateCache('cache:/api/tasks*');
+
+    return task;
+  }
+
+  async deleteTask(id) {
+    const task = await TaskRepository.delete(id);
+    if (!task) {
+      const error = new Error('Task not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    await invalidateCache('cache:/api/tasks*');
+
+    return task;
+  }
+
+  async getTeamTasks(teamId) {
+    const team = await TeamRepository.findById(teamId);
+    if (!team) {
+      const error = new Error('Team not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return await TaskRepository.findByTeam(teamId);
+  }
+
+  async getUserTasks(userId) {
+    return await TaskRepository.findByUser(userId);
+  }
+
+  async getTaskStats(teamId) {
+    const team = await TeamRepository.findById(teamId);
+    if (!team) {
+      const error = new Error('Team not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const stats = await TaskRepository.countByStatus(teamId);
+    const statuses = ['todo', 'in-progress', 'review', 'done'];
+    return statuses.map((status) => {
+      const found = stats.find((s) => s._id === status);
+      return { status, count: found ? found.count : 0 };
+    });
+  }
+}
+
+module.exports = new TaskService();
