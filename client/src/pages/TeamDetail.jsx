@@ -13,6 +13,8 @@ const TeamDetail = () => {
   const queryClient = useQueryClient();
   const [users, setUsers] = useState([]);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedRole, setSelectedRole] = useState('member');
 
   const { data, isLoading, error, refetch } = useQuery(['team', id], () => teamAPI.getById(id), { enabled: !!id });
 
@@ -149,32 +151,30 @@ const TeamDetail = () => {
             <div className="mb-4 p-4 bg-gray-50 rounded-md">
               <div className="flex gap-3">
                 <select
-                  id="add-member-user"
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  defaultValue=""
                 >
-                  <option value="" disabled>Select user</option>
+                  <option value="">Select user</option>
                   {availableUsers.map((u) => (
                     <option key={u._id} value={u._id}>{u.name || u.email}</option>
                   ))}
                 </select>
                 <select
-                  id="add-member-role"
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  defaultValue="member"
                 >
                   <option value="member">Member</option>
                   <option value="admin">Admin</option>
                 </select>
                 <button
                   onClick={() => {
-                    const userId = document.getElementById('add-member-user').value;
-                    const role = document.getElementById('add-member-role').value;
-                    if (!userId) {
+                    if (!selectedUserId) {
                       toast.error('Select a user');
                       return;
                     }
-                    addMutation.mutate({ userId, role });
+                    addMutation.mutate({ userId: selectedUserId, role: selectedRole });
                   }}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
                 >

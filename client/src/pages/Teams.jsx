@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import { teamAPI, authAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
@@ -10,6 +11,7 @@ const Teams = () => {
   const [filter, setFilter] = useState('all'); // all | my
   const [users, setUsers] = useState([]);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const { data: teams, isLoading } = useQuery(
@@ -135,7 +137,7 @@ const Teams = () => {
             const canDelete = role === 'owner' || role === 'admin';
 
             return (
-              <div key={team._id} className="bg-white shadow rounded-lg p-6">
+              <div key={team._id} className="bg-white shadow rounded-lg p-6 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/teams/${team._id}`)}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center">
                     <Users className="h-6 w-6 text-blue-600 mr-3" />
@@ -146,7 +148,8 @@ const Teams = () => {
                   </div>
                   {canDelete && (
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         if (window.confirm('Are you sure you want to delete this team?')) {
                           deleteMutation.mutate(team._id);
                         }
@@ -190,7 +193,8 @@ const Teams = () => {
                 <div className="mt-4 flex gap-2">
                   {inTeam ? (
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         if (window.confirm('Are you sure you want to leave this team?')) {
                           leaveMutation.mutate(team._id);
                         }
@@ -202,7 +206,8 @@ const Teams = () => {
                     </button>
                   ) : (
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         if (window.confirm('Do you want to join this team?')) {
                           joinMutation.mutate(team._id);
                         }

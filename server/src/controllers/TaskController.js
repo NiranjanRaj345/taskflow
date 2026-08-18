@@ -30,7 +30,7 @@ class TaskController {
       if (assignedTo) filters.assignedTo = assignedTo;
       if (team) filters.team = team;
 
-      const tasks = await taskService.getTasks(filters);
+      const tasks = await taskService.getTasks(filters, req.user.userId);
 
       res.status(200).json({
         success: true,
@@ -50,7 +50,7 @@ class TaskController {
 
   async getTaskById(req, res, _next) {
     try {
-      const task = await taskService.getTaskById(req.params.id);
+      const task = await taskService.getTaskById(req.params.id, req.user.userId);
 
       res.status(200).json({
         success: true,

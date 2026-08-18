@@ -37,17 +37,31 @@ class TaskService {
     return task;
   }
 
-  async getTasks(filters = {}) {
-    return await TaskRepository.findAll(filters);
+  async getTasks(filters = {}, userId) {
+    const user = await UserRepository.findById(userId);
+    if (!user || !user.team) {
+      return [];
+    }
+
+    const teamFilter = { ...filters, team: user.team.toString() };
+    return await TaskRepository.findAll(teamFilter);
   }
 
-  async getTaskById(id) {
+  async getTaskById(id, userId) {
     const task = await TaskRepository.findById(id);
     if (!task) {
       const error = new Error('Task not found');
       error.statusCode = 404;
       throw error;
     }
+
+    const user = await UserRepository.findById(userId);
+    if (!user || !user.team || task.team.toString() !== user.team.toString()) {
+      const error = new Error('You do not have permission to view this task');
+      error.statusCode = 403;
+      throw error;
+    }
+
     return task;
   }
 

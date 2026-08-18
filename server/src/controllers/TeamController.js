@@ -22,7 +22,7 @@ class TeamController {
 
   async getTeamById(req, res, _next) {
     try {
-      const team = await teamService.getTeamById(req.params.id, req.user.userId);
+      const team = await teamService.getTeamById(req.params.id);
 
       res.status(200).json({
         success: true,
@@ -61,7 +61,7 @@ class TeamController {
 
   async getAllTeams(req, res, _next) {
     try {
-      const teams = await teamService.getAllTeams(req.user.userId);
+      const teams = await teamService.getAllTeams();
 
       res.status(200).json({
         success: true,

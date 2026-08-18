@@ -24,22 +24,18 @@ class TeamService {
     return team;
   }
 
-  async getTeamById(id, userId) {
+  async getTeamById(id) {
     const team = await TeamRepository.findById(id);
     if (!team) {
       const error = new Error('Team not found');
       error.statusCode = 404;
       throw error;
     }
-
-    const isMember = team.members.some((m) => m.user.toString() === userId.toString());
-    if (!isMember) {
-      const error = new Error('You do not have permission to view this team');
-      error.statusCode = 403;
-      throw error;
-    }
-
     return team;
+  }
+
+  async getAllTeams() {
+    return await TeamRepository.findAll({});
   }
 
   async joinTeam(teamId, userId) {
