@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Teams from './pages/Teams';
+import TeamDetail from './pages/TeamDetail';
 import NotFound from './pages/NotFound';
 
 const PrivateRoute = ({ children }) => {
@@ -40,6 +41,7 @@ function App() {
         <Route index element={<Dashboard />} />
         <Route path="tasks" element={<Tasks />} />
         <Route path="teams" element={<Teams />} />
+        <Route path="teams/:id" element={<TeamDetail />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

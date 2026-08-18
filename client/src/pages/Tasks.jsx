@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { taskAPI, teamAPI, authAPI } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { Plus, Edit2, Trash2, Filter } from 'lucide-react';
 
@@ -45,6 +46,16 @@ const Tasks = () => {
       toast.success('Task deleted successfully');
     },
   });
+
+  const getTeamName = (teamId) => {
+    const team = teams.find((t) => t._id === teamId);
+    return team?.name || 'Unknown Team';
+  };
+
+  const getUserName = (userId) => {
+    const u = users.find((user) => user._id === userId);
+    return u?.name || u?.email || 'Unassigned';
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -164,6 +175,8 @@ const Tasks = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Team</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned To</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
@@ -178,6 +191,8 @@ const Tasks = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{task.priority}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getTeamName(task.team)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getUserName(task.assignedTo)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
                       </td>
