@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { teamAPI, taskAPI, authAPI } from '../services/api';
+import { teamAPI, authAPI } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { Plus, Users, Trash2, LogOut, UserPlus } from 'lucide-react';
 
