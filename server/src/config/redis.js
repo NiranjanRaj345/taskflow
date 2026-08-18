@@ -1,10 +1,11 @@
 const redis = require('redis');
+const logger = require('../utils/logger');
 
 let redisClient = null;
 
 const connectRedis = async () => {
   if (!process.env.REDIS_HOST && !process.env.REDIS_PORT) {
-    console.warn('Redis configuration missing. Running without Redis caching.');
+    logger.warn('Redis configuration missing. Running without Redis caching.');
     return null;
   }
 
@@ -17,15 +18,15 @@ const connectRedis = async () => {
       password: process.env.REDIS_PASSWORD || undefined,
     });
 
-    redisClient.on('error', (err) => console.error('Redis Client Error', err));
-    redisClient.on('connect', () => console.log('Redis connected successfully'));
+    redisClient.on('error', (err) => logger.error('Redis Client Error', err));
+    redisClient.on('connect', () => logger.info('Redis connected successfully'));
 
     await redisClient.connect();
 
     return redisClient;
   } catch (error) {
-    console.error('Redis connection failed:', error.message);
-    console.warn('Continuing without Redis caching for demo purposes.');
+    logger.error('Redis connection failed:', error.message);
+    logger.warn('Continuing without Redis caching for demo purposes.');
     return null;
   }
 };
@@ -59,12 +60,15 @@ const invalidateCache = async (pattern) => {
   if (!redisClient) return;
 
   try {
-    const keys = await redisClient.keys(pattern);
+    const keys = [];
+    for await (const key of redisClient.scanIterator({ MATCH: pattern })) {
+      keys.push(key);
+    }
     if (keys.length > 0) {
       await redisClient.del(keys);
     }
   } catch (error) {
-    console.error('Cache invalidation error:', error.message);
+    logger.error('Cache invalidation error:', error.message);
   }
 };
 

@@ -1,14 +1,5 @@
 const jwt = require('jsonwebtoken');
 const UserRepository = require('../repositories/UserRepository');
-const { demoUsers } = require('../config/demo-store');
-
-const isMongoConnected = () => {
-  try {
-    return require('mongoose').connection.readyState === 1;
-  } catch {
-    return false;
-  }
-};
 
 const auth = async (req, res, next) => {
   try {
@@ -28,18 +19,6 @@ const auth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (!isMongoConnected()) {
-      const user = demoUsers.find((u) => u._id === decoded.userId);
-      if (!user || !user.isActive) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid token or user not found.',
-        });
-      }
-      req.user = { userId: user._id, role: user.role };
-      return next();
-    }
 
     const user = await UserRepository.findById(decoded.userId);
 

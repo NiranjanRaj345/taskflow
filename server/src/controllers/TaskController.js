@@ -1,7 +1,7 @@
 const taskService = require('../services/TaskService');
 
 class TaskController {
-  async createTask(req, res, next) {
+  async createTask(req, res, _next) {
     try {
       const task = await taskService.createTask(req.body, req.user.userId);
 
@@ -20,7 +20,7 @@ class TaskController {
     }
   }
 
-  async getTasks(req, res, next) {
+  async getTasks(req, res, _next) {
     try {
       const { status, priority, assignedTo, team } = req.query;
       const filters = {};
@@ -48,7 +48,7 @@ class TaskController {
     }
   }
 
-  async getTaskById(req, res, next) {
+  async getTaskById(req, res, _next) {
     try {
       const task = await taskService.getTaskById(req.params.id);
 
@@ -67,7 +67,7 @@ class TaskController {
     }
   }
 
-  async updateTask(req, res, next) {
+  async updateTask(req, res, _next) {
     try {
       const task = await taskService.updateTask(req.params.id, req.body);
 
@@ -86,7 +86,7 @@ class TaskController {
     }
   }
 
-  async deleteTask(req, res, next) {
+  async deleteTask(req, res, _next) {
     try {
       await taskService.deleteTask(req.params.id);
 
@@ -105,7 +105,7 @@ class TaskController {
     }
   }
 
-  async getTeamTasks(req, res, next) {
+  async getTeamTasks(req, res, _next) {
     try {
       const tasks = await taskService.getTeamTasks(req.params.teamId);
 
@@ -125,7 +125,7 @@ class TaskController {
     }
   }
 
-  async getUserTasks(req, res, next) {
+  async getUserTasks(req, res, _next) {
     try {
       const tasks = await taskService.getUserTasks(req.user.userId);
 
@@ -145,9 +145,9 @@ class TaskController {
     }
   }
 
-  async getTaskStats(req, res, next) {
+  async getTaskStats(req, res, _next) {
     try {
-      const stats = await taskService.getTaskStats(req.params.teamId);
+      const stats = await taskService.getTaskStats(req.params.teamId, req.user.userId);
 
       res.status(200).json({
         success: true,

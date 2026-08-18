@@ -1,7 +1,7 @@
 const teamService = require('../services/TeamService');
 
 class TeamController {
-  async createTeam(req, res, next) {
+  async createTeam(req, res, _next) {
     try {
       const team = await teamService.createTeam(req.body, req.user.userId);
 
@@ -20,7 +20,7 @@ class TeamController {
     }
   }
 
-  async getTeamById(req, res, next) {
+  async getTeamById(req, res, _next) {
     try {
       const team = await teamService.getTeamById(req.params.id);
 
@@ -39,7 +39,7 @@ class TeamController {
     }
   }
 
-  async getAllTeams(req, res, next) {
+  async getAllTeams(req, res, _next) {
     try {
       const teams = await teamService.getAllTeams();
 
@@ -59,7 +59,7 @@ class TeamController {
     }
   }
 
-  async updateTeam(req, res, next) {
+  async updateTeam(req, res, _next) {
     try {
       const team = await teamService.updateTeam(req.params.id, req.body);
 
@@ -78,9 +78,9 @@ class TeamController {
     }
   }
 
-  async deleteTeam(req, res, next) {
+  async deleteTeam(req, res, _next) {
     try {
-      await teamService.deleteTeam(req.params.id);
+      await teamService.deleteTeam(req.params.id, req.user.userId);
 
       res.status(200).json({
         success: true,
@@ -97,7 +97,7 @@ class TeamController {
     }
   }
 
-  async addMember(req, res, next) {
+  async addMember(req, res, _next) {
     try {
       const { userId, role } = req.body;
       const team = await teamService.addMember(req.params.id, userId, role);
@@ -117,7 +117,7 @@ class TeamController {
     }
   }
 
-  async removeMember(req, res, next) {
+  async removeMember(req, res, _next) {
     try {
       const { userId } = req.body;
       const team = await teamService.removeMember(req.params.id, userId);

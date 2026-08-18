@@ -1,6 +1,6 @@
 const logger = require('../utils/logger');
 
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, _next) => {
   const requestId = req.id || 'unknown';
   let error = { ...err };
   error.message = err.message;

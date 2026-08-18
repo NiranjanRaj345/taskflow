@@ -14,8 +14,6 @@ const connectDB = async () => {
       maxPoolSize: parseInt(process.env.MONGODB_POOL_SIZE) || 10,
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
-      family: 4,
-      directConnection: true,
     });
 
     logger.info(`MongoDB Connected: ${conn.connection.host}`);

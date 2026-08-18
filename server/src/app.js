@@ -57,19 +57,6 @@ app.use(cookieParser());
 app.use(mongoSanitize());
 app.use(xss());
 
-app.use(
-  rateLimit({
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
-    message: {
-      success: false,
-      message: 'Too many requests, please try again later.',
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-  })
-);
-
 app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
 
 app.use(express.json({ limit: '10kb' }));
@@ -77,6 +64,14 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 app.use((req, res, next) => {
   req.invalidateCache = invalidateCache;
+  next();
+});
+
+const requestTimeout = parseInt(process.env.REQUEST_TIMEOUT_MS) || 30000;
+
+app.use((req, res, next) => {
+  req.setTimeout(requestTimeout);
+  res.setTimeout(requestTimeout);
   next();
 });
 
@@ -95,6 +90,19 @@ app.get('/api/health/ready', (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+app.use(
+  rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+    message: {
+      success: false,
+      message: 'Too many requests, please try again later.',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', cacheMiddleware(300), taskRoutes);

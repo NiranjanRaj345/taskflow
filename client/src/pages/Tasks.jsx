@@ -39,7 +39,7 @@ const Tasks = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    createMutation.mutate({
+    const taskData = {
       title: formData.get('title'),
       description: formData.get('description'),
       status: formData.get('status'),
@@ -47,7 +47,14 @@ const Tasks = () => {
       assignedTo: formData.get('assignedTo'),
       team: formData.get('team'),
       dueDate: formData.get('dueDate'),
-    });
+    };
+
+    if (!taskData.title || !taskData.description || !taskData.team || !taskData.assignedTo || !taskData.dueDate) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    createMutation.mutate(taskData);
   };
 
   const getStatusColor = (status) => {
@@ -94,11 +101,11 @@ const Tasks = () => {
                 <option value="high">High</option>
                 <option value="urgent">Urgent</option>
               </select>
-              <input name="dueDate" type="date" className="px-3 py-2 border border-gray-300 rounded-md" />
-              <input name="team" type="text" placeholder="Team ID" className="px-3 py-2 border border-gray-300 rounded-md" />
-              <input name="assignedTo" type="text" placeholder="Assigned User ID" className="px-3 py-2 border border-gray-300 rounded-md" />
+              <input name="dueDate" type="date" required className="px-3 py-2 border border-gray-300 rounded-md" />
+              <input name="team" type="text" required placeholder="Team ID" className="px-3 py-2 border border-gray-300 rounded-md" />
+              <input name="assignedTo" type="text" required placeholder="Assigned User ID" className="px-3 py-2 border border-gray-300 rounded-md" />
             </div>
-            <textarea name="description" rows="3" placeholder="Description" className="px-3 py-2 border border-gray-300 rounded-md w-full" />
+            <textarea name="description" rows="3" required placeholder="Description" className="px-3 py-2 border border-gray-300 rounded-md w-full" />
             <div className="flex gap-2">
               <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Create</button>
               <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Cancel</button>

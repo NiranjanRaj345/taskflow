@@ -1,7 +1,7 @@
 const authService = require('../services/AuthService');
 
 class AuthController {
-  async register(req, res, next) {
+  async register(req, res, _next) {
     try {
       const { name, email, password, role } = req.body;
       const result = await authService.register({ name, email, password, role });
@@ -21,7 +21,7 @@ class AuthController {
     }
   }
 
-  async login(req, res, next) {
+  async login(req, res, _next) {
     try {
       const { email, password } = req.body;
       const result = await authService.login(email, password);
@@ -41,7 +41,7 @@ class AuthController {
     }
   }
 
-  async getProfile(req, res, next) {
+  async getProfile(req, res, _next) {
     try {
       const user = await authService.getProfile(req.user.userId);
 
@@ -60,7 +60,7 @@ class AuthController {
     }
   }
 
-  async updateProfile(req, res, next) {
+  async updateProfile(req, res, _next) {
     try {
       const { name, email, avatar } = req.body;
       const user = await authService.updateProfile(req.user.userId, { name, email, avatar });
