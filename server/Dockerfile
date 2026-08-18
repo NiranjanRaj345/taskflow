@@ -2,11 +2,11 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY server/package*.json ./
 
 RUN npm ci --only=production
 
-COPY src/ ./src/
+COPY server/src/ ./src/
 
 RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
 
