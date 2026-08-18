@@ -19,14 +19,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      authAPI.getProfile().then((response) => {
-        setUser(response.data.data);
-        setIsAuthenticated(true);
-      }).catch(() => {
-        localStorage.removeItem('token');
-      }).finally(() => {
-        setLoading(false);
-      });
+      authAPI
+        .getProfile()
+        .then((response) => {
+          setUser(response.data.data);
+          setIsAuthenticated(true);
+        })
+        .catch((error) => {
+          if (error?.response?.status === 401 || error?.response?.status === 403) {
+            localStorage.removeItem('token');
+          }
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     } else {
       setLoading(false);
     }
