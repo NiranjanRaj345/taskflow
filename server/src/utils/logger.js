@@ -1,5 +1,9 @@
 const { createLogger, format, transports } = require('winston');
 
+const consoleTransport = new transports.Console({
+  format: format.combine(format.colorize(), format.printf(({ level, message, timestamp }) => `${timestamp} [${level}]: ${message}`)),
+});
+
 const logger = createLogger({
   level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
   format: format.combine(
@@ -9,20 +13,14 @@ const logger = createLogger({
     format.json()
   ),
   transports: [
-    new transports.Console({
-      format: format.combine(format.colorize(), format.printf(({ level, message, timestamp }) => `${timestamp} [${level}]: ${message}`)),
-    }),
+    consoleTransport,
     new transports.File({ filename: 'logs/error.log', level: 'error' }),
     new transports.File({ filename: 'logs/combined.log' }),
   ],
 });
 
 if (process.env.NODE_ENV === 'production') {
-  logger.remove(
-    transports.Console({
-      format: format.combine(format.colorize(), format.printf(({ level, message, timestamp }) => `${timestamp} [${level}]: ${message}`)),
-    })
-  );
+  logger.remove(consoleTransport);
 }
 
 module.exports = logger;
