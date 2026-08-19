@@ -61,6 +61,43 @@ taskflow/
 - **Helmet** - Security headers
 - **Express Rate Limit** - Rate limiting
 
+## Features
+
+### Authentication & Users
+- JWT-based registration and login
+- Profile page with editable name, email, and avatar
+- Unique `userId` per user for validation and lookup
+- Password hashing with bcrypt
+
+### Teams
+- Create public or private teams
+- Public teams are discoverable; private teams are invite-only
+- Join requests and admin/owner approval flow
+- Role-based access: `owner`, `admin`, `member`
+- Add/remove members
+- Update member roles
+- Invite links for joining teams
+- Team creator/owner detection with safe ObjectId handling
+
+### Tasks
+- Create tasks assigned to team members
+- Task status workflow: `todo` → `in-progress` → `review` → `done`
+- Status and priority filtering
+- "My Tasks" filter for assigned users
+- Assigned users can update task status
+- Owners/admins can update any task field
+- Completion indicators and done-task highlighting
+
+### Security & Production Readiness
+- Helmet security headers
+- Rate limiting
+- Input validation with Joi
+- MongoDB sanitization and XSS protection
+- Redis caching with invalidation
+- Request ID tracking
+- Graceful shutdown
+- Health check endpoints
+
 ## Database Connection Pooling
 
 MongoDB connection is configured with connection pooling:
@@ -68,7 +105,6 @@ MongoDB connection is configured with connection pooling:
 - `serverSelectionTimeoutMS: 10000`
 - `socketTimeoutMS: 45000`
 - `family: 4` - Force IPv4
-- `directConnection: true` - Direct TCP connection
 - Connection event handlers for monitoring
 
 ## Caching Strategy
@@ -157,6 +193,7 @@ npm run dev
 - `POST /api/auth/login` - Login user
 - `GET /api/auth/profile` - Get user profile
 - `PUT /api/auth/profile` - Update user profile
+- `GET /api/auth/users` - List users
 
 ### Tasks
 - `POST /api/tasks` - Create task
@@ -164,18 +201,27 @@ npm run dev
 - `GET /api/tasks/:id` - Get task by ID
 - `PUT /api/tasks/:id` - Update task
 - `DELETE /api/tasks/:id` - Delete task
-- `GET /api/tasks/user` - Get current user's tasks
+- `GET /api/tasks/user` - Get current user's assigned tasks
 - `GET /api/tasks/team/:teamId` - Get team tasks
 - `GET /api/tasks/stats/:teamId` - Get task statistics
 
 ### Teams
 - `POST /api/teams` - Create team
-- `GET /api/teams` - Get all teams
+- `GET /api/teams` - Get all public teams
+- `GET /api/teams/public` - Get public teams
+- `GET /api/teams/my` - Get my teams
 - `GET /api/teams/:id` - Get team by ID
 - `PUT /api/teams/:id` - Update team
 - `DELETE /api/teams/:id` - Delete team
+- `POST /api/teams/:id/request-join` - Request to join team
+- `POST /api/teams/:id/approve` - Approve join request
+- `POST /api/teams/:id/reject` - Reject join request
+- `GET /api/teams/:id/requests` - Get join requests
+- `POST /api/teams/:id/invite` - Generate invite link
+- `POST /api/invite/:token/accept` - Accept invite
 - `POST /api/teams/:id/members` - Add member
 - `DELETE /api/teams/:id/members` - Remove member
+- `PATCH /api/teams/:id/members/role` - Update member role
 
 ## Project Structure Details
 
@@ -217,46 +263,14 @@ src/
 - Request ID tracking
 - Graceful error handling
 
-## AI & Engineering Knowledge
-
-### Generative AI
-- Generative AI creates new content rather than classifying existing data.
-- Common approaches include GANs, VAEs, and transformer-based generation.
-- In software, it is used for code assistance, content generation, and test-data synthesis.
-
-### LLMs
-- Large Language Models are transformer-based models trained on large text corpora.
-- They excel at natural language understanding, summarization, translation, and code generation.
-- In this project, LLM concepts are relevant to automation like smart task description generation, chat-based assistance, and semantic search over tasks or documentation.
-
-### RAG
-- Retrieval-Augmented Generation combines retrieval with generation.
-- It improves accuracy by grounding model responses in retrieved documents instead of relying only on parametric memory.
-- Here, RAG could be applied to build an internal assistant that answers from task docs, wikis, or past tickets.
-
-### MCP
-- Model Context Protocol standardizes how applications expose context to models.
-- It enables consistent integration between tools, data sources, and models across environments.
-- This project follows a similar separation of concerns: routes → controllers → services → repositories, which maps cleanly to tool/data/model interaction boundaries.
-
-### Vector Databases
-- Vector databases store embeddings and support similarity search.
-- They are used for semantic search, recommendation, and RAG retrieval.
-- A production extension could add embeddings for task descriptions and use a vector store for semantic task lookup.
-
-### Agentic AI
-- Agentic AI refers to systems that plan, use tools, and act autonomously toward goals.
-- Key ideas include tool calling, memory, planning, and feedback loops.
-- This project already has agent-ready structure: discrete services, middleware, auth, and external integrations can become tool calls for an AI task assistant or workflow agent.
-
 ## Future Enhancements
 
-- Real-time notifications with Socket.io
-- File upload with Multer/S3
-- Email notifications
-- Advanced reporting & analytics
-- Mobile app (React Native)
-- OAuth integration (Google, GitHub)
+- Refresh tokens
+- Pagination for large task lists
+- Real-time updates with Socket.io
+- File uploads with S3
+- Integration tests for full auth flow
+- Switch to @tanstack/react-query v5
 
 ## License
 
