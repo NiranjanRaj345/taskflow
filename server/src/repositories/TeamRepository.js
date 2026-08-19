@@ -25,7 +25,10 @@ class TeamRepository {
   }
 
   async findPublic() {
-    return await Team.find({ isPublic: true, isActive: true })
+    return await Team.find({
+      $or: [{ isPublic: true }, { isPublic: { $exists: false } }],
+      isActive: true,
+    })
       .populate('createdBy', 'name email')
       .populate('members.user', 'name email role');
   }
