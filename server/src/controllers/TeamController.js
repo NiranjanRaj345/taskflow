@@ -22,7 +22,7 @@ class TeamController {
 
   async getTeamById(req, res, _next) {
     try {
-      const team = await teamService.getTeamById(req.params.id);
+      const team = await teamService.getTeamById(req.params.id, req.user.userId);
 
       res.status(200).json({
         success: true,

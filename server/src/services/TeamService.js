@@ -34,13 +34,23 @@ class TeamService {
     return team;
   }
 
-  async getTeamById(id) {
+  async getTeamById(id, userId) {
     const team = await TeamRepository.findById(id);
     if (!team) {
       const error = new Error('Team not found');
       error.statusCode = 404;
       throw error;
     }
+
+    if (!team.isPublic) {
+      const isMember = team.members.some((m) => getMemberUserId(m) === userId.toString());
+      if (!isMember) {
+        const error = new Error('This team is private');
+        error.statusCode = 403;
+        throw error;
+      }
+    }
+
     return team;
   }
 
