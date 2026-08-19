@@ -7,7 +7,9 @@ class TeamRepository {
   }
 
   async findById(id) {
-    return await Team.findById(id).populate('members.user', 'name email role');
+    return await Team.findById(id)
+      .populate('createdBy', 'name email')
+      .populate('members.user', 'name email role');
   }
 
   async findAll(filter = {}) {

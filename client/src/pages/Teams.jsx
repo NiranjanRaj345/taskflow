@@ -90,7 +90,7 @@ const Teams = () => {
   };
 
   const isOwner = (team) => {
-    return team.createdBy?._id === user?._id || team.createdBy === user?._id;
+    return team.createdBy?._id === user?._id || team.createdBy?.toString?.() === user?._id;
   };
 
   return (

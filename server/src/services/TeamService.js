@@ -93,8 +93,11 @@ class TeamService {
       throw error;
     }
 
+    const isCreator = team.createdBy.toString() === approverId.toString();
     const approver = team.members.find((m) => m.user.toString() === approverId.toString());
-    if (!approver || !['owner', 'admin'].includes(approver.role)) {
+    const isAdminOrOwner = approver && ['owner', 'admin'].includes(approver.role);
+
+    if (!isCreator && !isAdminOrOwner) {
       const error = new Error('Only owner or admin can approve requests');
       error.statusCode = 403;
       throw error;
@@ -126,8 +129,11 @@ class TeamService {
       throw error;
     }
 
+    const isCreator = team.createdBy.toString() === approverId.toString();
     const approver = team.members.find((m) => m.user.toString() === approverId.toString());
-    if (!approver || !['owner', 'admin'].includes(approver.role)) {
+    const isAdminOrOwner = approver && ['owner', 'admin'].includes(approver.role);
+
+    if (!isCreator && !isAdminOrOwner) {
       const error = new Error('Only owner or admin can reject requests');
       error.statusCode = 403;
       throw error;

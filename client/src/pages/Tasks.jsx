@@ -26,6 +26,11 @@ const Tasks = () => {
   const myRole = selectedTeam ? selectedTeam.members.find((m) => m.user?._id === user?._id)?.role : null;
   const canCreateTask = selectedTeam ? ['owner', 'admin'].includes(myRole) : false;
 
+  const hasAnyManageableTeam = teams.some((team) => {
+    const role = team.members.find((m) => m.user?._id === user?._id)?.role;
+    return ['owner', 'admin'].includes(role);
+  });
+
   const { data, isLoading } = useQuery('tasks', () => taskAPI.getAll(filter));
 
   const createMutation = useMutation(taskAPI.create, {
@@ -116,7 +121,7 @@ const Tasks = () => {
         )}
       </div>
 
-      {!canCreateTask && teams.length > 0 && (
+      {!hasAnyManageableTeam && teams.length > 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
           <p className="text-sm text-yellow-800">
             You need to be an owner or admin of a team to create tasks.
