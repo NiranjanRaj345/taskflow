@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Teams from './pages/Teams';
 import TeamDetail from './pages/TeamDetail';
+import Invite from './pages/Invite';
 import NotFound from './pages/NotFound';
 
 const PrivateRoute = ({ children }) => {
@@ -30,6 +31,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/invite/:token" element={<Invite />} />
       <Route
         path="/"
         element={

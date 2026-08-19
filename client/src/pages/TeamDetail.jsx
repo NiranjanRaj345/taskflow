@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { teamAPI, authAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Users, UserPlus, LogOut, Trash2, Crown } from 'lucide-react';
+import { ArrowLeft, Users, UserPlus, LogOut, Trash2, Crown, Check, X, Copy, CheckCircle } from 'lucide-react';
 
 const TeamDetail = () => {
   const { id } = useParams();
@@ -15,6 +15,8 @@ const TeamDetail = () => {
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [selectedRole, setSelectedRole] = useState('member');
+  const [inviteLink, setInviteLink] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const { data, isLoading, error, refetch } = useQuery(['team', id], () => teamAPI.getById(id), { enabled: !!id });
 
@@ -27,6 +29,12 @@ const TeamDetail = () => {
 
   const myRole = members.find((m) => m.user?._id === user?._id)?.role;
   const canManage = myRole === 'owner' || myRole === 'admin';
+
+  const { data: requestsData } = useQuery(
+    ['joinRequests', id],
+    () => teamAPI.getJoinRequests(id),
+    { enabled: !!id && canManage }
+  );
 
   const addMutation = useMutation(
     ({ userId, role }) => teamAPI.addMember(id, { userId, role }),
@@ -67,6 +75,44 @@ const TeamDetail = () => {
     },
   });
 
+  const approveMutation = useMutation(
+    ({ userId }) => teamAPI.approveJoin(id, userId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['team', id]);
+        queryClient.invalidateQueries('teams');
+        queryClient.invalidateQueries(['joinRequests', id]);
+        toast.success('Join request approved');
+      },
+    }
+  );
+
+  const rejectMutation = useMutation(
+    ({ userId }) => teamAPI.rejectJoin(id, userId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['joinRequests', id]);
+        toast.success('Join request rejected');
+      },
+    }
+  );
+
+  const generateInviteMutation = useMutation(
+    ({ role }) => teamAPI.generateInviteLink(id, role),
+    {
+      onSuccess: (data) => {
+        setInviteLink(data.data.data.link);
+        toast.success('Invitation link generated!');
+      },
+    }
+  );
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(inviteLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -89,6 +135,7 @@ const TeamDetail = () => {
   }
 
   const availableUsers = users.filter((u) => !members.some((m) => m.user?._id === u._id));
+  const joinRequests = requestsData?.data?.data || [];
 
   return (
     <div className="space-y-6">
@@ -226,6 +273,80 @@ const TeamDetail = () => {
           </div>
         </div>
       </div>
+
+      {canManage && joinRequests.length > 0 && (
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Join Requests ({joinRequests.length})</h3>
+            <div className="space-y-3">
+              {joinRequests.map((request) => (
+                <div key={request._id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-md">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-700 font-medium text-sm">
+                      {(request.user.name || request.user.email).charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{request.user.name || request.user.email}</p>
+                      <p className="text-xs text-gray-500">{request.user.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => approveMutation.mutate({ userId: request.user._id })}
+                      className="p-2 text-green-600 hover:bg-green-100 rounded-md"
+                      title="Approve"
+                    >
+                      <Check className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => rejectMutation.mutate({ userId: request.user._id })}
+                      className="p-2 text-red-600 hover:bg-red-100 rounded-md"
+                      title="Reject"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {canManage && (
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Invitation Link</h3>
+            <p className="text-sm text-gray-500 mb-3">Generate a one-time invitation link that anyone can use to join this team without approval.</p>
+            
+            {!inviteLink ? (
+              <button
+                onClick={() => generateInviteMutation.mutate({ role: 'member' })}
+                disabled={generateInviteMutation.isLoading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm disabled:opacity-50"
+              >
+                Generate Invitation Link
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={inviteLink}
+                  readOnly
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
+                <button
+                  onClick={copyToClipboard}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm"
+                >
+                  {copied ? <CheckCircle className="h-4 w-4 inline mr-2 text-green-600" /> : <Copy className="h-4 w-4 inline mr-2" />}
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:p-6">

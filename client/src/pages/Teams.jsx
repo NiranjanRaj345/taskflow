@@ -4,12 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { teamAPI, authAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
-import { Plus, Users, Trash2, LogOut, UserPlus } from 'lucide-react';
+import { Plus, Users, Trash2, LogOut, UserPlus, Clock } from 'lucide-react';
 
 const Teams = () => {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState('all'); // all | my
   const [users, setUsers] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState({});
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -44,10 +45,13 @@ const Teams = () => {
     },
   });
 
-  const joinMutation = useMutation(teamAPI.join, {
-    onSuccess: () => {
-      queryClient.invalidateQueries('teams');
-      toast.success('Joined team successfully');
+  const requestJoinMutation = useMutation(teamAPI.requestJoin, {
+    onSuccess: (_, teamId) => {
+      setPendingRequests((prev) => ({ ...prev, [teamId]: true }));
+      toast.success('Join request sent! Waiting for approval.');
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to send join request');
     },
   });
 
@@ -83,6 +87,10 @@ const Teams = () => {
   const getUserRole = (team) => {
     const member = team.members?.find((m) => m.user?._id === user?._id);
     return member?.role;
+  };
+
+  const isOwner = (team) => {
+    return team.createdBy?._id === user?._id || team.createdBy === user?._id;
   };
 
   return (
@@ -134,7 +142,9 @@ const Teams = () => {
           teams?.data?.data?.map((team) => {
             const inTeam = isUserInTeam(team);
             const role = getUserRole(team);
+            const owner = isOwner(team);
             const canDelete = role === 'owner' || role === 'admin';
+            const hasPendingRequest = pendingRequests[team._id];
 
             return (
               <div key={team._id} className="bg-white shadow rounded-lg p-6 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/teams/${team._id}`)}>
@@ -191,7 +201,11 @@ const Teams = () => {
                 </div>
 
                 <div className="mt-4 flex gap-2">
-                  {inTeam ? (
+                  {owner ? (
+                    <span className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-purple-300 text-sm font-medium rounded-md text-purple-700 bg-purple-50">
+                      Owner
+                    </span>
+                  ) : inTeam ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -204,18 +218,21 @@ const Teams = () => {
                       <LogOut className="h-4 w-4 mr-2" />
                       Leave
                     </button>
+                  ) : hasPendingRequest ? (
+                    <span className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-yellow-300 text-sm font-medium rounded-md text-yellow-700 bg-yellow-50">
+                      <Clock className="h-4 w-4 mr-2" />
+                      Pending Approval
+                    </span>
                   ) : (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (window.confirm('Do you want to join this team?')) {
-                          joinMutation.mutate(team._id);
-                        }
+                        requestJoinMutation.mutate(team._id);
                       }}
                       className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                     >
                       <UserPlus className="h-4 w-4 mr-2" />
-                      Join
+                      Request to Join
                     </button>
                   )}
                 </div>
