@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Teams from './pages/Teams';
 import TeamDetail from './pages/TeamDetail';
+import Profile from './pages/Profile';
 import Invite from './pages/Invite';
 import NotFound from './pages/NotFound';
 
@@ -44,6 +45,7 @@ function App() {
         <Route path="tasks" element={<Tasks />} />
         <Route path="teams" element={<Teams />} />
         <Route path="teams/:id" element={<TeamDetail />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

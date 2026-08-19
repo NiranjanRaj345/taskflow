@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { LayoutDashboard, ListTodo, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Users, User, LogOut } from 'lucide-react';
 
 const Layout = () => {
   const { logout, user } = useAuth();
@@ -36,6 +36,10 @@ const Layout = () => {
                 <NavLink to="/teams" className={navLinkClass}>
                   <Users size={18} />
                   Teams
+                </NavLink>
+                <NavLink to="/profile" className={navLinkClass}>
+                  <User size={18} />
+                  Profile
                 </NavLink>
               </div>
             </div>
