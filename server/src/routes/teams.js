@@ -20,5 +20,6 @@ router.post('/:id/invite', teamController.generateInvitationLink);
 router.post('/invite/:token/accept', teamController.acceptInvitation);
 router.post('/:id/members', validationMiddleware.schemas.addMember, teamController.addMember);
 router.delete('/:id/members', validationMiddleware.schemas.removeMember, teamController.removeMember);
+router.patch('/:id/members/role', validationMiddleware.schemas.updateMemberRole, teamController.updateMemberRole);
 
 module.exports = router;

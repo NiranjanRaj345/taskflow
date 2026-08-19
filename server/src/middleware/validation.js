@@ -62,6 +62,11 @@ const removeMemberSchema = Joi.object({
   userId: Joi.string().hex().length(24).required(),
 });
 
+const updateMemberRoleSchema = Joi.object({
+  userId: Joi.string().hex().length(24).required(),
+  role: Joi.string().valid('owner', 'admin', 'member').required(),
+});
+
 const updateProfileSchema = Joi.object({
   name: Joi.string().trim().min(2).max(50),
   email: Joi.string().email(),
@@ -94,6 +99,7 @@ module.exports = {
     updateTeam: validation(updateTeamSchema),
     addMember: validation(addMemberSchema),
     removeMember: validation(removeMemberSchema),
+    updateMemberRole: validation(updateMemberRoleSchema),
     updateProfile: validation(updateProfileSchema),
   },
 };

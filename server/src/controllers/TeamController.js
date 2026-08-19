@@ -302,6 +302,26 @@ class TeamController {
       });
     }
   }
+
+  async updateMemberRole(req, res, _next) {
+    try {
+      const { userId, role } = req.body;
+      const team = await teamService.updateMemberRole(req.params.id, userId, role, req.user.userId);
+
+      res.status(200).json({
+        success: true,
+        data: team,
+      });
+    } catch (error) {
+      const statusCode = error.statusCode || 500;
+      const message = error.message || 'Server Error';
+      res.status(statusCode).json({
+        success: false,
+        message,
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+      });
+    }
+  }
 }
 
 module.exports = new TeamController();

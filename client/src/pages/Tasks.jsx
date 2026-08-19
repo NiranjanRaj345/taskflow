@@ -110,7 +110,7 @@ const Tasks = () => {
           <h1 className="text-2xl font-bold text-gray-900">Tasks</h1>
           <p className="mt-1 text-sm text-gray-600">Manage your tasks and track progress</p>
         </div>
-        {canCreateTask && (
+        {hasAnyManageableTeam && (
           <button
             onClick={() => setShowForm(!showForm)}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
@@ -129,7 +129,7 @@ const Tasks = () => {
         </div>
       )}
 
-      {showForm && canCreateTask && (
+      {showForm && (
         <div className="bg-white shadow rounded-lg p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Task</h3>
           <form onSubmit={handleSubmit} className="space-y-4">

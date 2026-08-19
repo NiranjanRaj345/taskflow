@@ -62,6 +62,7 @@ export const teamAPI = {
   acceptInvite: (token) => api.post(`/teams/invite/${token}/accept`),
   addMember: (id, data) => api.post(`/teams/${id}/members`, data),
   removeMember: (id, data) => api.delete(`/teams/${id}/members`, { data }),
+  updateMemberRole: (id, data) => api.patch(`/teams/${id}/members/role`, data),
 };
 
 export default api;

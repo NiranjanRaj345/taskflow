@@ -50,6 +50,14 @@ class TeamRepository {
       { new: true }
     ).populate('members.user', 'name email role');
   }
+
+  async updateMemberRole(teamId, userId, role) {
+    return await Team.findOneAndUpdate(
+      { _id: teamId, 'members.user': userId },
+      { $set: { 'members.$.role': role } },
+      { new: true }
+    ).populate('members.user', 'name email role');
+  }
 }
 
 module.exports = new TeamRepository();

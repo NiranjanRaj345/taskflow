@@ -368,6 +368,52 @@ class TeamService {
 
     return updatedTeam;
   }
+
+  async updateMemberRole(teamId, userId, newRole, requesterId) {
+    const team = await TeamRepository.findById(teamId);
+    if (!team) {
+      const error = new Error('Team not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const requester = team.members.find((m) => m.user.toString() === requesterId.toString());
+    if (!requester || !['owner', 'admin'].includes(requester.role)) {
+      const error = new Error('Only owner or admin can update member roles');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (getCreatorId(team) === userId.toString()) {
+      const error = new Error('Cannot change the team creator role');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (requesterId.toString() === userId.toString()) {
+      const error = new Error('Cannot change your own role');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const targetMember = team.members.find((m) => m.user.toString() === userId.toString());
+    if (!targetMember) {
+      const error = new Error('Member not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (targetMember.role === 'owner') {
+      const error = new Error('Cannot change owner role');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const updatedTeam = await TeamRepository.updateMemberRole(teamId, userId, newRole);
+    await invalidateCache('cache:/api/teams*');
+
+    return updatedTeam;
+  }
 }
 
 module.exports = new TeamService();

@@ -108,6 +108,20 @@ const TeamDetail = () => {
     }
   );
 
+  const updateRoleMutation = useMutation(
+    ({ userId, role }) => teamAPI.updateMemberRole(id, { userId, role }),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['team', id]);
+        queryClient.invalidateQueries('teams');
+        toast.success('Role updated');
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to update role');
+      },
+    }
+  );
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(inviteLink);
     setCopied(true);
@@ -256,6 +270,16 @@ const TeamDetail = () => {
                     {member.role === 'owner' && <Crown className="h-3 w-3 inline mr-1" />}
                     {member.role}
                   </span>
+                  {canManage && member.role !== 'owner' && (
+                    <select
+                      value={member.role}
+                      onChange={(e) => updateRoleMutation.mutate({ userId: member.user._id, role: e.target.value })}
+                      className="text-xs border border-gray-300 rounded-md px-2 py-1 bg-white"
+                    >
+                      <option value="member">Member</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  )}
                   {canManage && member.role !== 'owner' && (
                     <button
                       onClick={() => {
