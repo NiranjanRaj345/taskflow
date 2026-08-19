@@ -63,6 +63,9 @@ class TaskService {
     }
 
     const teamFilter = { ...filters, team: user.team.toString() };
+    if (teamFilter.assignedTo === user._id.toString()) {
+      delete teamFilter.assignedTo;
+    }
     return await TaskRepository.findAll(teamFilter);
   }
 
@@ -84,17 +87,47 @@ class TaskService {
     return task;
   }
 
-  async updateTask(id, updateData) {
-    const task = await TaskRepository.update(id, updateData);
+  async updateTask(id, updateData, userId) {
+    const task = await TaskRepository.findById(id);
     if (!task) {
       const error = new Error('Task not found');
       error.statusCode = 404;
       throw error;
     }
 
+    const team = await TeamRepository.findById(task.team);
+    if (!team) {
+      const error = new Error('Team not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const member = team.members.find((m) => getMemberUserId(m) === userId.toString());
+    const isOwnerOrAdmin = member && ['owner', 'admin'].includes(member.role);
+    const isAssigned = task.assignedTo && task.assignedTo.toString() === userId.toString();
+
+    if (!isOwnerOrAdmin && !isAssigned) {
+      const error = new Error('You do not have permission to update this task');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (!isOwnerOrAdmin && isAssigned) {
+      const allowedFields = ['status'];
+      const updateKeys = Object.keys(updateData);
+      const hasDisallowedField = updateKeys.some((key) => !allowedFields.includes(key));
+
+      if (hasDisallowedField) {
+        const error = new Error('Assigned users can only update task status');
+        error.statusCode = 403;
+        throw error;
+      }
+    }
+
+    const updatedTask = await TaskRepository.update(id, updateData);
     await invalidateCache('cache:/api/tasks*');
 
-    return task;
+    return updatedTask;
   }
 
   async deleteTask(id) {
@@ -121,10 +154,17 @@ class TaskService {
 
   async getUserTasks(userId) {
     const user = await UserRepository.findById(userId);
-    if (!user || !user.team) {
+    if (!user) {
       return [];
     }
-    return await TaskRepository.findByTeam(user.team.toString());
+
+    const userTeams = await TeamRepository.findByMember(userId);
+    const teamIds = userTeams.map((team) => team._id);
+    if (teamIds.length === 0) {
+      return [];
+    }
+
+    return await TaskRepository.findByTeams(teamIds, userId);
   }
 
   async getTaskStats(teamId, userId) {

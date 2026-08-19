@@ -3,11 +3,18 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { taskAPI, teamAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2, Filter } from 'lucide-react';
+import { Plus, Edit2, Trash2, Filter, CheckCircle2, Circle, Clock, User } from 'lucide-react';
+
+const TASK_STATUSES = [
+  { value: 'todo', label: 'To Do', icon: Circle, color: 'text-gray-500' },
+  { value: 'in-progress', label: 'In Progress', icon: Clock, color: 'text-yellow-500' },
+  { value: 'review', label: 'Review', icon: Edit2, color: 'text-blue-500' },
+  { value: 'done', label: 'Done', icon: CheckCircle2, color: 'text-green-500' },
+];
 
 const Tasks = () => {
   const [showForm, setShowForm] = useState(false);
-  const [filter, setFilter] = useState({ status: '', priority: '' });
+  const [filter, setFilter] = useState({ status: '', priority: '', mine: false });
   const [teams, setTeams] = useState([]);
   const [users, setUsers] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
@@ -31,7 +38,17 @@ const Tasks = () => {
     return ['owner', 'admin'].includes(role);
   });
 
-  const { data, isLoading } = useQuery(['tasks', filter], () => taskAPI.getAll(filter));
+  const { data, isLoading } = useQuery(
+    ['tasks', filter],
+    () => {
+      if (filter.mine) {
+        return taskAPI.getUserTasks();
+      }
+      const params = { ...filter };
+      delete params.mine;
+      return taskAPI.getAll(params);
+    },
+  );
 
   const createMutation = useMutation(taskAPI.create, {
     onSuccess: () => {
@@ -46,13 +63,19 @@ const Tasks = () => {
     },
   });
 
-  const updateMutation = useMutation(({ id, data }) => taskAPI.update(id, data), {
-    onSuccess: () => {
-      queryClient.invalidateQueries('tasks');
-      queryClient.invalidateQueries('userTasks');
-      toast.success('Task updated successfully');
-    },
-  });
+  const updateMutation = useMutation(
+    ({ id, data }) => taskAPI.update(id, data),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('tasks');
+        queryClient.invalidateQueries('userTasks');
+        toast.success('Task updated successfully');
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to update task');
+      },
+    }
+  );
 
   const deleteMutation = useMutation(taskAPI.delete, {
     onSuccess: () => {
@@ -70,6 +93,25 @@ const Tasks = () => {
   const getUserName = (userId) => {
     const u = users.find((user) => user._id === userId);
     return u?.name || u?.email || 'Unassigned';
+  };
+
+  const getStatusInfo = (statusValue) => {
+    return TASK_STATUSES.find((s) => s.value === statusValue) || TASK_STATUSES[0];
+  };
+
+  const canUpdateTask = (task) => {
+    if (!user || !task) return false;
+    const team = teams.find((t) => t._id === task.team);
+    if (!team) return false;
+    const member = team.members.find((m) => m.user?._id === user._id);
+    if (!member) return false;
+    if (['owner', 'admin'].includes(member.role)) return true;
+    if (task.assignedTo && task.assignedTo.toString() === user._id) return true;
+    return false;
+  };
+
+  const handleStatusChange = (taskId, newStatus) => {
+    updateMutation.mutate({ id: taskId, data: { status: newStatus } });
   };
 
   const handleSubmit = (e) => {
@@ -94,6 +136,7 @@ const Tasks = () => {
   };
 
   const getStatusColor = (status) => {
+    const info = getStatusInfo(status);
     switch (status) {
       case 'todo': return 'bg-gray-100 text-gray-800';
       case 'in-progress': return 'bg-yellow-100 text-yellow-800';
@@ -136,10 +179,9 @@ const Tasks = () => {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <input name="title" type="text" required placeholder="Task title" className="px-3 py-2 border border-gray-300 rounded-md" />
               <select name="status" className="px-3 py-2 border border-gray-300 rounded-md">
-                <option value="todo">To Do</option>
-                <option value="in-progress">In Progress</option>
-                <option value="review">Review</option>
-                <option value="done">Done</option>
+                {TASK_STATUSES.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
               </select>
               <select name="priority" className="px-3 py-2 border border-gray-300 rounded-md">
                 <option value="low">Low</option>
@@ -148,9 +190,9 @@ const Tasks = () => {
                 <option value="urgent">Urgent</option>
               </select>
               <input name="dueDate" type="date" required className="px-3 py-2 border border-gray-300 rounded-md" />
-              <select 
-                name="team" 
-                required 
+              <select
+                name="team"
+                required
                 className="px-3 py-2 border border-gray-300 rounded-md"
                 value={selectedTeamId}
                 onChange={(e) => {
@@ -189,10 +231,9 @@ const Tasks = () => {
             <Filter className="h-5 w-5 text-gray-400" />
             <select value={filter.status} onChange={(e) => setFilter({ ...filter, status: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-md">
               <option value="">All Status</option>
-              <option value="todo">To Do</option>
-              <option value="in-progress">In Progress</option>
-              <option value="review">Review</option>
-              <option value="done">Done</option>
+              {TASK_STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
             </select>
             <select value={filter.priority} onChange={(e) => setFilter({ ...filter, priority: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-md">
               <option value="">All Priority</option>
@@ -201,6 +242,17 @@ const Tasks = () => {
               <option value="high">High</option>
               <option value="urgent">Urgent</option>
             </select>
+            <button
+              onClick={() => setFilter({ status: '', priority: '', mine: !filter.mine })}
+              className={`px-3 py-2 border rounded-md text-sm font-medium ${
+                filter.mine
+                  ? 'bg-blue-50 border-blue-300 text-blue-700'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <User className="h-4 w-4 inline mr-2" />
+              My Tasks
+            </button>
           </div>
 
           {isLoading ? (
@@ -216,34 +268,70 @@ const Tasks = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Team</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned To</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Completion</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {data?.data?.data?.map((task) => (
-                    <tr key={task._id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{task.title}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(task.status)}`}>
-                          {task.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{task.priority}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getTeamName(task.team)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getUserName(task.assignedTo)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onClick={() => updateMutation.mutate({ id: task._id, data: { status: task.status === 'todo' ? 'in-progress' : 'todo' } })} className="text-blue-600 hover:text-blue-900 mr-3">
-                          <Edit2 className="h-4 w-4" />
-                        </button>
-                        <button onClick={() => deleteMutation.mutate(task._id)} className="text-red-600 hover:text-red-900">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {data?.data?.data?.map((task) => {
+                    const statusInfo = getStatusInfo(task.status);
+                    const StatusIcon = statusInfo.icon;
+                    const updatable = canUpdateTask(task);
+                    const isDone = task.status === 'done';
+
+                    return (
+                      <tr key={task._id} className={isDone ? 'bg-green-50' : ''}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <div className="flex items-center gap-2">
+                            {task.title}
+                            {isDone && <CheckCircle2 className="h-4 w-4 text-green-600" />}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {updatable ? (
+                            <select
+                              value={task.status}
+                              onChange={(e) => handleStatusChange(task._id, e.target.value)}
+                              className={`text-xs border border-gray-300 rounded-md px-2 py-1 ${getStatusColor(task.status)}`}
+                            >
+                              {TASK_STATUSES.map((s) => (
+                                <option key={s.value} value={s.value}>{s.label}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(task.status)}`}>
+                              {task.status}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{task.priority}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getTeamName(task.team)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <User className="h-3 w-3 text-gray-400" />
+                            {getUserName(task.assignedTo)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {isDone ? (
+                            <span className="text-green-600 font-medium">Completed</span>
+                          ) : (
+                            <span className="text-gray-400">In Progress</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          {updatable && !isDone && (
+                            <button onClick={() => deleteMutation.mutate(task._id)} className="text-red-600 hover:text-red-900">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               {(!data?.data?.data || data.data.data.length === 0) && (

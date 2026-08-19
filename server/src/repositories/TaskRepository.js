@@ -42,6 +42,13 @@ class TaskRepository {
       .sort({ createdAt: -1 });
   }
 
+  async findByTeams(teamIds, userId) {
+    return await Task.find({ team: { $in: teamIds }, assignedTo: userId })
+      .populate('assignedTo', 'name email')
+      .populate('createdBy', 'name email')
+      .sort({ createdAt: -1 });
+  }
+
   async findByUser(userId) {
     return await Task.find({ assignedTo: userId })
       .populate('assignedTo', 'name email')
