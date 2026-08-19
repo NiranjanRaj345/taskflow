@@ -31,7 +31,7 @@ const Tasks = () => {
     return ['owner', 'admin'].includes(role);
   });
 
-  const { data, isLoading } = useQuery('tasks', () => taskAPI.getAll(filter));
+  const { data, isLoading } = useQuery(['tasks', filter], () => taskAPI.getAll(filter));
 
   const createMutation = useMutation(taskAPI.create, {
     onSuccess: () => {
