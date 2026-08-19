@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { taskAPI, teamAPI, authAPI } from '../services/api';
+import { taskAPI, teamAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { Plus, Edit2, Trash2, Filter } from 'lucide-react';
@@ -10,12 +10,21 @@ const Tasks = () => {
   const [filter, setFilter] = useState({ status: '', priority: '' });
   const [teams, setTeams] = useState([]);
   const [users, setUsers] = useState([]);
+  const [selectedTeamId, setSelectedTeamId] = useState('');
   const queryClient = useQueryClient();
 
+  const { user } = useAuth();
+
   useEffect(() => {
-    teamAPI.getAll().then((res) => setTeams(res.data.data)).catch(() => {});
-    authAPI.getAllUsers().then((res) => setUsers(res.data.data)).catch(() => {});
+    teamAPI.getMyTeams().then((res) => {
+      setTeams(res.data.data || []);
+    }).catch(() => {});
   }, []);
+
+  const selectedTeam = teams.find((t) => t._id === selectedTeamId);
+  const teamMembers = selectedTeam?.members || [];
+  const myRole = selectedTeam ? selectedTeam.members.find((m) => m.user?._id === user?._id)?.role : null;
+  const canCreateTask = selectedTeam ? ['owner', 'admin'].includes(myRole) : false;
 
   const { data, isLoading } = useQuery('tasks', () => taskAPI.getAll(filter));
 
@@ -24,6 +33,7 @@ const Tasks = () => {
       queryClient.invalidateQueries('tasks');
       queryClient.invalidateQueries('userTasks');
       setShowForm(false);
+      setSelectedTeamId('');
       toast.success('Task created successfully');
     },
     onError: (error) => {
@@ -95,16 +105,26 @@ const Tasks = () => {
           <h1 className="text-2xl font-bold text-gray-900">Tasks</h1>
           <p className="mt-1 text-sm text-gray-600">Manage your tasks and track progress</p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          New Task
-        </button>
+        {canCreateTask && (
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Task
+          </button>
+        )}
       </div>
 
-      {showForm && (
+      {!canCreateTask && teams.length > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+          <p className="text-sm text-yellow-800">
+            You need to be an owner or admin of a team to create tasks.
+          </p>
+        </div>
+      )}
+
+      {showForm && canCreateTask && (
         <div className="bg-white shadow rounded-lg p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Task</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -123,23 +143,36 @@ const Tasks = () => {
                 <option value="urgent">Urgent</option>
               </select>
               <input name="dueDate" type="date" required className="px-3 py-2 border border-gray-300 rounded-md" />
-              <select name="team" required className="px-3 py-2 border border-gray-300 rounded-md">
+              <select 
+                name="team" 
+                required 
+                className="px-3 py-2 border border-gray-300 rounded-md"
+                value={selectedTeamId}
+                onChange={(e) => {
+                  setSelectedTeamId(e.target.value);
+                }}
+              >
                 <option value="">Select Team</option>
-                {teams.map((team) => (
-                  <option key={team._id} value={team._id}>{team.name}</option>
-                ))}
+                {teams.map((team) => {
+                  const role = team.members.find((m) => m.user?._id === user?._id)?.role;
+                  return (
+                    <option key={team._id} value={team._id} disabled={!['owner', 'admin'].includes(role)}>
+                      {team.name} {role ? `(${role})` : ''}
+                    </option>
+                  );
+                })}
               </select>
-              <select name="assignedTo" required className="px-3 py-2 border border-gray-300 rounded-md">
+              <select name="assignedTo" required className="px-3 py-2 border border-gray-300 rounded-md" disabled={!selectedTeamId}>
                 <option value="">Assign to</option>
-                {users.map((u) => (
-                  <option key={u._id} value={u._id}>{u.name || u.email}</option>
+                {teamMembers.map((m) => (
+                  <option key={m.user._id} value={m.user._id}>{m.user.name || m.user.email}</option>
                 ))}
               </select>
             </div>
             <textarea name="description" rows="3" required placeholder="Description" className="px-3 py-2 border border-gray-300 rounded-md w-full" />
             <div className="flex gap-2">
               <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Create</button>
-              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Cancel</button>
+              <button type="button" onClick={() => { setShowForm(false); setSelectedTeamId(''); }} className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Cancel</button>
             </div>
           </form>
         </div>

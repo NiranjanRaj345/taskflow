@@ -18,11 +18,25 @@ class TaskService {
       throw error;
     }
 
+    const member = team.members.find((m) => m.user.toString() === userId.toString());
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      const error = new Error('Only team owner or admin can create tasks');
+      error.statusCode = 403;
+      throw error;
+    }
+
     if (taskData.assignedTo) {
       const assignedUser = await UserRepository.findById(taskData.assignedTo);
       if (!assignedUser) {
         const error = new Error('Assigned user not found');
         error.statusCode = 404;
+        throw error;
+      }
+
+      const isAssignedMember = team.members.some((m) => m.user.toString() === taskData.assignedTo.toString());
+      if (!isAssignedMember) {
+        const error = new Error('Assigned user must be a member of the team');
+        error.statusCode = 400;
         throw error;
       }
     }

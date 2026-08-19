@@ -11,11 +11,15 @@ class TeamRepository {
   }
 
   async findAll(filter = {}) {
-    return await Team.find(filter).populate('createdBy', 'name email');
+    return await Team.find(filter)
+      .populate('createdBy', 'name email')
+      .populate('members.user', 'name email role');
   }
 
   async findByMember(userId) {
-    return await Team.find({ members: { $elemMatch: { user: userId } } }).populate('createdBy', 'name email');
+    return await Team.find({ members: { $elemMatch: { user: userId } } })
+      .populate('createdBy', 'name email')
+      .populate('members.user', 'name email role');
   }
 
   async update(id, updateData) {
