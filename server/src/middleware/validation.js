@@ -46,11 +46,13 @@ const updateTaskSchema = Joi.object({
 const createTeamSchema = Joi.object({
   name: Joi.string().trim().min(2).max(50).required(),
   description: Joi.string().trim().max(200),
+  isPublic: Joi.boolean().default(true),
 });
 
 const updateTeamSchema = Joi.object({
   name: Joi.string().trim().min(2).max(50),
   description: Joi.string().trim().max(200),
+  isPublic: Joi.boolean(),
 });
 
 const addMemberSchema = Joi.object({

@@ -24,6 +24,12 @@ class TeamRepository {
       .populate('members.user', 'name email role');
   }
 
+  async findPublic() {
+    return await Team.find({ isPublic: true, isActive: true })
+      .populate('createdBy', 'name email')
+      .populate('members.user', 'name email role');
+  }
+
   async update(id, updateData) {
     return await Team.findByIdAndUpdate(id, updateData, {
       new: true,

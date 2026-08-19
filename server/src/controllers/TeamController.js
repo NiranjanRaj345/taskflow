@@ -59,6 +59,26 @@ class TeamController {
     }
   }
 
+  async getPublicTeams(req, res, _next) {
+    try {
+      const teams = await teamService.getPublicTeams();
+
+      res.status(200).json({
+        success: true,
+        count: teams.length,
+        data: teams,
+      });
+    } catch (error) {
+      const statusCode = error.statusCode || 500;
+      const message = error.message || 'Server Error';
+      res.status(statusCode).json({
+        success: false,
+        message,
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+      });
+    }
+  }
+
   async getAllTeams(req, res, _next) {
     try {
       const teams = await teamService.getAllTeams();

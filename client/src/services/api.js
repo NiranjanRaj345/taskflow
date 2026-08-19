@@ -50,6 +50,7 @@ export const taskAPI = {
 export const teamAPI = {
   getAll: () => api.get('/teams'),
   getMyTeams: () => api.get('/teams/my'),
+  getPublicTeams: () => api.get('/teams/public'),
   getById: (id) => api.get(`/teams/${id}`),
   create: (data) => api.post('/teams', data),
   update: (id, data) => api.put(`/teams/${id}`, data),

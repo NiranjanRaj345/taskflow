@@ -9,6 +9,7 @@ router.use(auth);
 router.post('/', validationMiddleware.schemas.createTeam, teamController.createTeam);
 router.get('/', teamController.getAllTeams);
 router.get('/my', teamController.getUserTeams);
+router.get('/public', teamController.getPublicTeams);
 router.get('/:id', teamController.getTeamById);
 router.put('/:id', validationMiddleware.schemas.updateTeam, teamController.updateTeam);
 router.delete('/:id', teamController.deleteTeam);

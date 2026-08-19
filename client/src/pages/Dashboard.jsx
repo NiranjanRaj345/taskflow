@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { data: teamsData } = useQuery('teams', teamAPI.getAll);
+  const { data: teamsData } = useQuery('myTeams', teamAPI.getMyTeams);
   const { data, isLoading, error } = useQuery('userTasks', taskAPI.getUserTasks);
 
   const teams = teamsData?.data?.data || [];

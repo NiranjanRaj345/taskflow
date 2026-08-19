@@ -45,7 +45,11 @@ class TeamService {
   }
 
   async getAllTeams() {
-    return await TeamRepository.findAll({});
+    return await TeamRepository.findPublic();
+  }
+
+  async getPublicTeams() {
+    return await TeamRepository.findPublic();
   }
 
   async getUserTeams(userId) {
@@ -74,24 +78,33 @@ class TeamService {
       throw error;
     }
 
-    const existingRequest = await TeamInvitationRepository.findByTeamAndUser(teamId, userId);
-    if (existingRequest) {
-      const error = new Error('You already have a pending request to join this team');
-      error.statusCode = 400;
-      throw error;
+    if (!team.isPublic) {
+      const existingRequest = await TeamInvitationRepository.findByTeamAndUser(teamId, userId);
+      if (existingRequest) {
+        const error = new Error('You already have a pending request to join this team');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const invitation = await TeamInvitationRepository.create({
+        team: teamId,
+        user: userId,
+        invitedBy: getCreatorId(team),
+        role: 'member',
+        status: 'pending',
+      });
+
+      await invalidateCache('cache:/api/teams*');
+
+      return { team, invitation };
     }
 
-    const invitation = await TeamInvitationRepository.create({
-      team: teamId,
-      user: userId,
-      invitedBy: team.createdBy,
-      role: 'member',
-      status: 'pending',
-    });
+    const updatedTeam = await TeamRepository.addMember(teamId, userId, 'member');
+    await UserRepository.update(userId, { team: teamId });
 
     await invalidateCache('cache:/api/teams*');
 
-    return { team, invitation };
+    return { team: updatedTeam };
   }
 
   async approveJoinRequest(teamId, userId, approverId) {

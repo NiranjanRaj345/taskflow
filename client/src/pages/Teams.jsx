@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { teamAPI, authAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
-import { Plus, Users, Trash2, LogOut, UserPlus, Clock } from 'lucide-react';
+import { Plus, Users, Trash2, LogOut, UserPlus, Clock, Globe, Lock } from 'lucide-react';
 
 const Teams = () => {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState('all'); // all | my
+  const [isPublic, setIsPublic] = useState(true);
   const [users, setUsers] = useState([]);
   const [pendingRequests, setPendingRequests] = useState({});
   const queryClient = useQueryClient();
@@ -17,7 +18,7 @@ const Teams = () => {
 
   const { data: teams, isLoading } = useQuery(
     ['teams', filter],
-    () => filter === 'my' ? teamAPI.getMyTeams() : teamAPI.getAll(),
+    () => filter === 'my' ? teamAPI.getMyTeams() : teamAPI.getPublicTeams(),
     { keepPreviousData: true }
   );
 
@@ -68,6 +69,7 @@ const Teams = () => {
     createMutation.mutate({
       name: formData.get('name'),
       description: formData.get('description'),
+      isPublic: isPublic,
     });
   };
 
@@ -78,6 +80,23 @@ const Teams = () => {
       member: 'bg-gray-100 text-gray-800',
     };
     return colors[role] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getVisibilityBadge = (team) => {
+    if (team.isPublic === false) {
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+          <Lock className="h-3 w-3 mr-1" />
+          Private
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800">
+        <Globe className="h-3 w-3 mr-1" />
+        Public
+      </span>
+    );
   };
 
   const isUserInTeam = (team) => {
@@ -126,6 +145,35 @@ const Teams = () => {
             <div className="grid grid-cols-1 gap-4">
               <input name="name" type="text" required placeholder="Team name" className="px-3 py-2 border border-gray-300 rounded-md" />
               <textarea name="description" rows="3" placeholder="Description" className="px-3 py-2 border border-gray-300 rounded-md w-full" />
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="public"
+                    checked={isPublic}
+                    onChange={() => setIsPublic(true)}
+                    className="h-4 w-4 text-blue-600"
+                  />
+                  <Globe className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-700">Public</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="private"
+                    checked={!isPublic}
+                    onChange={() => setIsPublic(false)}
+                    className="h-4 w-4 text-blue-600"
+                  />
+                  <Lock className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-700">Private</span>
+                </label>
+              </div>
+              <p className="text-xs text-gray-500">
+                {isPublic ? 'Anyone can discover and join this team directly.' : 'Only members can see this team. Others need an invite link or admin approval to join.'}
+              </p>
             </div>
             <div className="flex gap-2">
               <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Create</button>
@@ -176,11 +224,14 @@ const Teams = () => {
                     <p className="text-sm text-gray-600">
                       Members: {team.members?.length || 0}
                     </p>
-                    {role && (
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadge(role)}`}>
-                        {role}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {getVisibilityBadge(team)}
+                      {role && (
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadge(role)}`}>
+                          {role}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {team.members && team.members.length > 0 && (
@@ -223,7 +274,7 @@ const Teams = () => {
                       <Clock className="h-4 w-4 mr-2" />
                       Pending Approval
                     </span>
-                  ) : (
+                  ) : team.isPublic === false ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -233,6 +284,17 @@ const Teams = () => {
                     >
                       <UserPlus className="h-4 w-4 mr-2" />
                       Request to Join
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        requestJoinMutation.mutate(team._id);
+                      }}
+                      className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Join Team
                     </button>
                   )}
                 </div>

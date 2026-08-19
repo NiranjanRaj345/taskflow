@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { teamAPI, authAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Users, UserPlus, LogOut, Trash2, Crown, Check, X, Copy, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Users, UserPlus, LogOut, Trash2, Crown, Check, X, Copy, CheckCircle, Globe, Lock } from 'lucide-react';
 
 const TeamDetail = () => {
   const { id } = useParams();
@@ -162,6 +162,19 @@ const TeamDetail = () => {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{team.name}</h1>
             <p className="text-sm text-gray-500">{team.description || 'No description'}</p>
+            <div className="mt-1">
+              {team.isPublic === false ? (
+                <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                  <Lock className="h-3 w-3 mr-1" />
+                  Private Team
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                  <Globe className="h-3 w-3 mr-1" />
+                  Public Team
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex gap-2">
