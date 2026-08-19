@@ -3,6 +3,8 @@ const TeamInvitationRepository = require('../repositories/TeamInvitationReposito
 const UserRepository = require('../repositories/UserRepository');
 const { invalidateCache } = require('../config/redis');
 
+const getCreatorId = (team) => (team.createdBy._id || team.createdBy).toString();
+
 class TeamService {
   async createTeam(teamData, userId) {
     const owner = await UserRepository.findById(userId);
@@ -51,7 +53,7 @@ class TeamService {
       throw error;
     }
 
-    const isOwner = team.createdBy.toString() === userId.toString();
+    const isOwner = getCreatorId(team) === userId.toString();
     if (isOwner) {
       const error = new Error('You are the owner of this team');
       error.statusCode = 400;
@@ -93,7 +95,7 @@ class TeamService {
       throw error;
     }
 
-    const isCreator = team.createdBy.toString() === approverId.toString();
+    const isCreator = getCreatorId(team) === approverId.toString();
     const approver = team.members.find((m) => m.user.toString() === approverId.toString());
     const isAdminOrOwner = approver && ['owner', 'admin'].includes(approver.role);
 
@@ -129,7 +131,7 @@ class TeamService {
       throw error;
     }
 
-    const isCreator = team.createdBy.toString() === approverId.toString();
+    const isCreator = getCreatorId(team) === approverId.toString();
     const approver = team.members.find((m) => m.user.toString() === approverId.toString());
     const isAdminOrOwner = approver && ['owner', 'admin'].includes(approver.role);
 
@@ -235,7 +237,7 @@ class TeamService {
       throw error;
     }
 
-    const isCreator = team.createdBy.toString() === userId.toString();
+    const isCreator = getCreatorId(team) === userId.toString();
     const requester = team.members.find((m) => m.user.toString() === userId.toString());
     const isAdminOrOwner = requester && ['owner', 'admin'].includes(requester.role);
 
@@ -299,7 +301,7 @@ class TeamService {
       throw error;
     }
 
-    const isOwner = team.createdBy.toString() === userId.toString();
+    const isOwner = getCreatorId(team) === userId.toString();
     const member = team.members.find((m) => m.user.toString() === userId.toString());
     const isAdminOrOwner = member && ['owner', 'admin'].includes(member.role);
 
@@ -329,7 +331,7 @@ class TeamService {
       throw error;
     }
 
-    const isOwner = team.createdBy.toString() === userId.toString();
+    const isOwner = getCreatorId(team) === userId.toString();
     if (isOwner) {
       const error = new Error('Owner is already a member of this team');
       error.statusCode = 400;
