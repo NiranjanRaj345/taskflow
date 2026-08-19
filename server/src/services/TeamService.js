@@ -229,8 +229,11 @@ class TeamService {
       throw error;
     }
 
+    const isCreator = team.createdBy.toString() === userId.toString();
     const requester = team.members.find((m) => m.user.toString() === userId.toString());
-    if (!requester || !['owner', 'admin'].includes(requester.role)) {
+    const isAdminOrOwner = requester && ['owner', 'admin'].includes(requester.role);
+
+    if (!isCreator && !isAdminOrOwner) {
       const error = new Error('Only owner or admin can view requests');
       error.statusCode = 403;
       throw error;

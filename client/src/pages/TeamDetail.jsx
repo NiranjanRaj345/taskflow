@@ -28,7 +28,8 @@ const TeamDetail = () => {
   const members = team?.members || [];
 
   const myRole = members.find((m) => m.user?._id === user?._id)?.role;
-  const canManage = myRole === 'owner' || myRole === 'admin';
+  const isCreator = team?.createdBy?._id === user?._id || team?.createdBy === user?._id;
+  const canManage = (myRole === 'owner' || myRole === 'admin') || isCreator;
 
   const { data: requestsData } = useQuery(
     ['joinRequests', id],
