@@ -3,6 +3,11 @@ const TeamRepository = require('../repositories/TeamRepository');
 const UserRepository = require('../repositories/UserRepository');
 const { invalidateCache } = require('../config/redis');
 
+const getMemberUserId = (member) => {
+  const id = member.user && (member.user._id || member.user);
+  return id.toString();
+};
+
 class TaskService {
   async createTask(taskData, userId) {
     if (!taskData.team) {
@@ -18,7 +23,7 @@ class TaskService {
       throw error;
     }
 
-    const member = team.members.find((m) => m.user.toString() === userId.toString());
+    const member = team.members.find((m) => getMemberUserId(m) === userId.toString());
     if (!member || !['owner', 'admin'].includes(member.role)) {
       const error = new Error('Only team owner or admin can create tasks');
       error.statusCode = 403;
@@ -33,7 +38,7 @@ class TaskService {
         throw error;
       }
 
-      const isAssignedMember = team.members.some((m) => m.user.toString() === taskData.assignedTo.toString());
+      const isAssignedMember = team.members.some((m) => getMemberUserId(m) === taskData.assignedTo.toString());
       if (!isAssignedMember) {
         const error = new Error('Assigned user must be a member of the team');
         error.statusCode = 400;
@@ -130,7 +135,7 @@ class TaskService {
       throw error;
     }
 
-    const isMember = team.members.some((m) => m.user.toString() === userId.toString());
+    const isMember = team.members.some((m) => getMemberUserId(m) === userId.toString());
     if (!isMember) {
       const error = new Error('You do not have permission to view this team\'s stats');
       error.statusCode = 403;

@@ -3,7 +3,14 @@ const TeamInvitationRepository = require('../repositories/TeamInvitationReposito
 const UserRepository = require('../repositories/UserRepository');
 const { invalidateCache } = require('../config/redis');
 
-const getCreatorId = (team) => (team.createdBy._id || team.createdBy).toString();
+const getCreatorId = (team) => {
+  const id = team.createdBy && (team.createdBy._id || team.createdBy);
+  return id.toString();
+};
+const getMemberUserId = (member) => {
+  const id = member.user && (member.user._id || member.user);
+  return id.toString();
+};
 
 class TeamService {
   async createTeam(teamData, userId) {
@@ -60,7 +67,7 @@ class TeamService {
       throw error;
     }
 
-    const isAlreadyMember = team.members.some((m) => m.user.toString() === userId.toString());
+    const isAlreadyMember = team.members.some((m) => getMemberUserId(m) === userId.toString());
     if (isAlreadyMember) {
       const error = new Error('You are already a member of this team');
       error.statusCode = 400;
@@ -96,7 +103,7 @@ class TeamService {
     }
 
     const isCreator = getCreatorId(team) === approverId.toString();
-    const approver = team.members.find((m) => m.user.toString() === approverId.toString());
+    const approver = team.members.find((m) => getMemberUserId(m) === approverId.toString());
     const isAdminOrOwner = approver && ['owner', 'admin'].includes(approver.role);
 
     if (!isCreator && !isAdminOrOwner) {
@@ -132,7 +139,7 @@ class TeamService {
     }
 
     const isCreator = getCreatorId(team) === approverId.toString();
-    const approver = team.members.find((m) => m.user.toString() === approverId.toString());
+    const approver = team.members.find((m) => getMemberUserId(m) === approverId.toString());
     const isAdminOrOwner = approver && ['owner', 'admin'].includes(approver.role);
 
     if (!isCreator && !isAdminOrOwner) {
@@ -164,7 +171,7 @@ class TeamService {
       throw error;
     }
 
-    const requester = team.members.find((m) => m.user.toString() === userId.toString());
+    const requester = team.members.find((m) => getMemberUserId(m) === userId.toString());
     if (!requester || !['owner', 'admin'].includes(requester.role)) {
       const error = new Error('Only owner or admin can generate invitation links');
       error.statusCode = 403;
@@ -211,7 +218,7 @@ class TeamService {
       throw error;
     }
 
-    const isAlreadyMember = team.members.some((m) => m.user.toString() === userId.toString());
+    const isAlreadyMember = team.members.some((m) => getMemberUserId(m) === userId.toString());
     if (isAlreadyMember) {
       const error = new Error('You are already a member of this team');
       error.statusCode = 400;
@@ -238,7 +245,7 @@ class TeamService {
     }
 
     const isCreator = getCreatorId(team) === userId.toString();
-    const requester = team.members.find((m) => m.user.toString() === userId.toString());
+    const requester = team.members.find((m) => getMemberUserId(m) === userId.toString());
     const isAdminOrOwner = requester && ['owner', 'admin'].includes(requester.role);
 
     if (!isCreator && !isAdminOrOwner) {
@@ -259,7 +266,7 @@ class TeamService {
       throw error;
     }
 
-    const member = team.members.find((m) => m.user.toString() === userId.toString());
+    const member = team.members.find((m) => getMemberUserId(m) === userId.toString());
     if (!member) {
       const error = new Error('You are not a member of this team');
       error.statusCode = 400;
@@ -302,7 +309,7 @@ class TeamService {
     }
 
     const isOwner = getCreatorId(team) === userId.toString();
-    const member = team.members.find((m) => m.user.toString() === userId.toString());
+    const member = team.members.find((m) => getMemberUserId(m) === userId.toString());
     const isAdminOrOwner = member && ['owner', 'admin'].includes(member.role);
 
     if (!isOwner && !isAdminOrOwner) {
@@ -377,7 +384,7 @@ class TeamService {
       throw error;
     }
 
-    const requester = team.members.find((m) => m.user.toString() === requesterId.toString());
+    const requester = team.members.find((m) => getMemberUserId(m) === requesterId.toString());
     if (!requester || !['owner', 'admin'].includes(requester.role)) {
       const error = new Error('Only owner or admin can update member roles');
       error.statusCode = 403;
@@ -396,7 +403,7 @@ class TeamService {
       throw error;
     }
 
-    const targetMember = team.members.find((m) => m.user.toString() === userId.toString());
+    const targetMember = team.members.find((m) => getMemberUserId(m) === userId.toString());
     if (!targetMember) {
       const error = new Error('Member not found');
       error.statusCode = 404;
