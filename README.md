@@ -1,11 +1,11 @@
-# TaskFlow - Team Collaboration & Task Management
+# FlowBoard - Team Collaboration & Task Management
 
 A production-ready full-stack web application for team collaboration and task management, built with **React**, **Node.js**, **Express.js**, **MongoDB**, and **Redis**.
 
 ## Architecture
 
 ```
-taskflow/
+flowboard/
 ├── client/                 # React frontend (Vite + Tailwind CSS)
 │   ├── src/
 │   │   ├── components/     # Reusable UI components
@@ -127,8 +127,8 @@ This project follows a **Feature Branch Workflow**:
 
 ```bash
 # Clone repository
-git clone <repo-url>
-cd taskflow
+  git clone <repo-url>
+  cd flowboard
 
 # Create feature branch
 git checkout -b feature/task-assignment

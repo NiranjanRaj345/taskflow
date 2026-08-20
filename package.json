@@ -1,7 +1,7 @@
 {
-  "name": "taskflow",
+  "name": "flowboard",
   "version": "1.0.0",
-  "description": "TaskFlow - Team Collaboration & Task Management",
+  "description": "FlowBoard - Team Collaboration & Task Management",
   "private": true,
   "scripts": {
     "install:all": "cd server && npm install && cd ../client && npm install",

@@ -23,7 +23,7 @@ const Layout = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">TaskFlow</h1>
+              <h1 className="text-xl font-bold text-gray-900">FlowBoard</h1>
               <div className="hidden md:flex ml-10 space-x-4">
                 <NavLink to="/" className={navLinkClass} end>
                   <LayoutDashboard size={18} />

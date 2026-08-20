@@ -1,8 +1,8 @@
-# TaskFlow — Interview Preparation Guide
+# FlowBoard — Interview Preparation Guide
 
 ## 1. Elevator Pitch (2 min)
 
-> "TaskFlow is a production-ready, full-stack team collaboration and task management app I built end-to-end. It has a React frontend deployed on Vercel, a Node.js/Express backend on Render, and is designed to connect to MongoDB Atlas with Redis caching. The architecture follows clean separation of concerns: routes → controllers → services → repositories, with JWT auth, input validation, rate limiting, security headers, and graceful shutdown. The key differentiator is that it's built to be production-hardened — not just a CRUD demo."
+> "FlowBoard is a production-ready, full-stack team collaboration and task management app I built end-to-end. It has a React frontend deployed on Vercel, a Node.js/Express backend on Render, and is designed to connect to MongoDB Atlas with Redis caching. The architecture follows clean separation of concerns: routes → controllers → services → repositories, with JWT auth, input validation, rate limiting, security headers, and graceful shutdown. The key differentiator is that it's built to be production-hardened — not just a CRUD demo."
 
 ---
 
